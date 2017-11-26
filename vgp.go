@@ -86,7 +86,7 @@ func initCommand() {
 	}
 	originGopath := os.Getenv("GOPATH")
 	vscodeSettingsPath := filepath.Join(vscodePath, "settings.json")
-	settingsContent := []byte(fmt.Sprintf("{\n  \"go.path\": \"${workspaceRoot}\",\n  \"go.toolsGopath\": \"%s\"\n}", originGopath))
+	settingsContent := []byte(fmt.Sprintf("{\n  \"go.gopath\": \"${workspaceRoot}\",\n  \"go.toolsGopath\": \"%s\"\n}", originGopath))
 	err = ioutil.WriteFile(vscodeSettingsPath, settingsContent, 0664)
 	if err != nil {
 		log.Fatalln(err)
