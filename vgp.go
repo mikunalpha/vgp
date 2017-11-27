@@ -57,7 +57,7 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "init":
+	case "init", "create":
 		initCommand()
 	default:
 		proxyCommand()
@@ -165,7 +165,7 @@ func proxyCommand() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-	case "get", "up", "rm":
+	case "config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree":
 		os.Args[0] = "glide"
 		execute("/usr/bin/env", os.Args...)
 	default:
