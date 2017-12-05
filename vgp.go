@@ -15,9 +15,10 @@ import (
 )
 
 var (
-	rootPath = ""
-	srcPath  = ""
-	distPath = ""
+	rootPath   = ""
+	configPath = ""
+	srcPath    = ""
+	distPath   = ""
 
 	packageName = ""
 	packagePath = ""
@@ -32,6 +33,25 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	// find vgp.ini
+	for {
+		_, err = os.Stat(filepath.Join(rootPath, "vgp.ini"))
+		if !os.IsNotExist(err) {
+			fmt.Println("found", filepath.Join(rootPath, "vgp.ini"))
+			break
+		}
+
+		parentPath := filepath.Dir(rootPath)
+
+		if parentPath == rootPath {
+			log.Fatalln("Not a project managed by vgp (or any of the parent directories): vgp.ini")
+			return
+		}
+
+		rootPath = parentPath
+	}
+
 	srcPath = filepath.Join(rootPath, "src")
 	distPath = filepath.Join(rootPath, "dist")
 
