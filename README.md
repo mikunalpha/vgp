@@ -21,7 +21,7 @@ vgp get some/package/name
 ```
 Below sub-commands will be passed `glide`:
 ```
-"config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree":
+"config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree"
 ```
 
 ### Using go command
