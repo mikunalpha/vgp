@@ -1,5 +1,5 @@
 ## Usage
-*reqire `glide` installed
+*require `glide` installed
 ### vgp.ini
 Create `vgp.ini` file under your project
 ```
