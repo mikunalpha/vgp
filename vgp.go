@@ -183,7 +183,7 @@ func proxyCommand() {
 		}
 	case "config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree":
 		os.Args[0] = "glide"
-		execute("/usr/bin/env", os.Args...)
+		execute("CGO_ENABLED=0 /usr/bin/env", os.Args...)
 	default:
 		os.Args[0] = "go"
 		execute("/usr/bin/env", os.Args...)
