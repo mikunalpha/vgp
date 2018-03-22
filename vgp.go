@@ -183,10 +183,10 @@ func proxyCommand() {
 		}
 	case "config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree":
 		os.Args[0] = "glide"
-		execute("CGO_ENABLED=0 /usr/bin/env", os.Args...)
+		execute("/usr/bin/env", os.Args...)
 	default:
 		os.Args[0] = "go"
-		execute("/usr/bin/env", os.Args...)
+		execute("CGO_ENABLED=0 /usr/bin/env", os.Args...)
 	}
 }
 
@@ -215,7 +215,7 @@ func execute(cmdstr string, args ...string) error {
 	cmd.Wait()
 
 	if !cmd.ProcessState.Success() {
-		return errors.New("Executation Error")
+		return fmt.Errorf("executation error: %s %v", cmdstr, args)
 	}
 
 	return nil
