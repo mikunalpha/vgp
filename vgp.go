@@ -1,11 +1,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,10 +13,11 @@ import (
 )
 
 var (
-	rootPath   = ""
-	configPath = ""
-	srcPath    = ""
-	distPath   = ""
+	currentPath = ""
+	rootPath    = ""
+	configPath  = ""
+	srcPath     = ""
+	distPath    = ""
 
 	packageName = ""
 	packagePath = ""
@@ -26,27 +25,36 @@ var (
 	outPath     = ""
 )
 
+func Infof(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, format, args...)
+}
+
+func Fatalf(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, args...)
+	os.Exit(1)
+}
+
 func main() {
 	var err error
 
-	rootPath, err = os.Getwd()
+	currentPath, err = os.Getwd()
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
+	rootPath = currentPath
 
 	// find vgp.ini
 	for {
 		_, err = os.Stat(filepath.Join(rootPath, "vgp.ini"))
 		if !os.IsNotExist(err) {
-			fmt.Println("found", filepath.Join(rootPath, "vgp.ini"))
+			// Infof("found %s", filepath.Join(rootPath, "vgp.ini"))
 			break
 		}
 
 		parentPath := filepath.Dir(rootPath)
 
 		if parentPath == rootPath {
-			log.Fatalln("Not a project managed by vgp (or any of the parent directories): vgp.ini")
-			return
+			Fatalf("Not a project managed by vgp (or any of the parent directories): vgp.ini")
 		}
 
 		rootPath = parentPath
@@ -58,17 +66,17 @@ func main() {
 	// Read configuration
 	config, err := ini.Load(filepath.Join(rootPath, "vgp.ini"))
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
 	packageName = config.Section("").Key("package_name").String()
 	if packageName == "" {
-		log.Fatalln(errors.New("Configuration Error. package_name is required"))
+		Fatalf("Configuration Error. package_name is required")
 	}
 	packagePath = filepath.Join(srcPath, packageName)
 
 	outName = config.Section("").Key("out").String()
 	if outName == "" {
-		log.Fatalln(errors.New("Configuration Error. out is required"))
+		Fatalf("Configuration Error. out is required")
 	}
 	outPath = filepath.Join(distPath, outName)
 
@@ -91,7 +99,7 @@ func initCommand() {
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(packagePath, 0775)
 		if err != nil {
-			log.Fatalln(err)
+			Fatalf("%s", err)
 		}
 	}
 
@@ -101,15 +109,18 @@ func initCommand() {
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(vscodePath, 0775)
 		if err != nil {
-			log.Fatalln(err)
+			Fatalf("%s", err)
 		}
 	}
 	originGopath := os.Getenv("GOPATH")
 	vscodeSettingsPath := filepath.Join(vscodePath, "settings.json")
-	settingsContent := []byte(fmt.Sprintf("{\n  \"go.gopath\": \"${workspaceRoot}\",\n  \"go.toolsGopath\": \"%s\"\n}", originGopath))
+	settingsContent := []byte(fmt.Sprintf(`{
+	"go.gopath": "${workspaceRoot}",
+	"go.toolsGopath": "%s"
+}`, originGopath))
 	err = ioutil.WriteFile(vscodeSettingsPath, settingsContent, 0664)
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
 
 	// Set GOPATH
@@ -117,18 +128,18 @@ func initCommand() {
 
 	err = os.Chdir(packagePath)
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
 
 	// glide init
 	err = execute("/usr/bin/env", "glide", "create", "--skip-import", "--non-interactive")
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
 	// glide install
 	err = execute("/usr/bin/env", "glide", "install", "--skip-test", "--strip-vendor")
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
 }
 
@@ -140,7 +151,7 @@ func proxyCommand() {
 
 	err = os.Chdir(packagePath)
 	if err != nil {
-		log.Fatalln(err)
+		Fatalf("%s", err)
 	}
 
 	switch os.Args[1] {
@@ -149,7 +160,7 @@ func proxyCommand() {
 		if os.IsNotExist(err) {
 			err = os.MkdirAll(distPath, 0775)
 			if err != nil {
-				log.Fatalln(err)
+				Fatalf("%s", err)
 			}
 		}
 
@@ -159,12 +170,14 @@ func proxyCommand() {
 				continue
 			}
 			if i == len(os.Args)-1 {
-				os.Args = append(os.Args, distPath)
+				os.Args = append(os.Args, outPath)
 			} else if strings.HasPrefix(os.Args[i+1], "-") {
-				tmp := append([]string{distPath}, os.Args[i+1:]...)
+				tmp := append([]string{outPath}, os.Args[i+1:]...)
 				os.Args = append(os.Args[:i+1], tmp...)
 			} else {
-				os.Args[i+1] = distPath
+				if !filepath.IsAbs(os.Args[i+1]) {
+					os.Args[i+1] = filepath.Join(currentPath, os.Args[i+1])
+				}
 			}
 			replaced = true
 			break
@@ -179,7 +192,7 @@ func proxyCommand() {
 		os.Args[0] = "go"
 		err = execute("/usr/bin/env", os.Args...)
 		if err != nil {
-			log.Fatalln(err)
+			Fatalf("%s", err)
 		}
 	case "config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree":
 		os.Args[0] = "glide"
