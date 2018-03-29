@@ -15,14 +15,31 @@ out=yourpackage
 vgp init && vgp up
 ```
 
+### Project Structure
+```
+- vgp.ini
+- .vscode/
+  - settings.json
+- dist/
+- src/
+  - github.com
+    - yourname
+      - yourpackage
+        - vendor/
+        - glide.lock
+        - glide.yaml
+```
+
 ### Using glide to manage packages
-```
-vgp get some/package/name
-```
-Below sub-commands will be passed `glide`:
+Below sub-commands will be passed to `glide`:
 ```
 "config-wizard", "cw", "get", "update", "up", "remove", "rm", "info", "novendor", "nv", "tree"
 ```
+Download a package.
+```
+vgp get some/package/name
+```
+It's recommended that use `vgp up` after you import a new downloaded package.
 
 ### Using go command
 Other sub-commands will be passed to `go`.
