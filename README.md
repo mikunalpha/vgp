@@ -1,5 +1,9 @@
 ## Usage
 *require `glide` installed
+```
+go get -u github.com/mikunalpha/vgp
+```
+
 ### vgp.ini
 Create `vgp.ini` file under your project
 ```
