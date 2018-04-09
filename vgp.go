@@ -190,7 +190,7 @@ func proxyCommand() {
 		}
 
 		os.Args[0] = "go"
-		err = execute("/usr/bin/env", os.Args...)
+		err = execute("CGO_ENABLED=0 /usr/bin/env", os.Args...)
 		if err != nil {
 			Fatalf("%s", err)
 		}
@@ -199,7 +199,7 @@ func proxyCommand() {
 		execute("/usr/bin/env", os.Args...)
 	default:
 		os.Args[0] = "go"
-		execute("CGO_ENABLED=0 /usr/bin/env", os.Args...)
+		execute("/usr/bin/env", os.Args...)
 	}
 }
 
